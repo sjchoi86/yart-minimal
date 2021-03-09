@@ -1,16 +1,40 @@
 ccc
-%% 1. Show and control Kuka IIWA7 manipulator
+%% Show and control of some robots
 ccc
-urdf_path = '../urdf/iiwa7/iiwa7_urdf.xml';
+robot_name = 'coman'; % coman / iiwa7
+urdf_path = sprintf('../urdf/%s/%s_urdf.xml',robot_name,robot_name);
 cache_folder = '../cache/';
-chain = get_chain_from_urdf_with_caching('iiwa7','RE',0,'SKIP_CAPSULE',0,...
+chain = get_chain_from_urdf_with_caching(robot_name,'RE',0,'SKIP_CAPSULE',0,...
     'urdf_path',urdf_path,'cache_folder',cache_folder);
+plot_chain_graph(chain,'fig_idx',2,'fig_pos',[0.5,0.0,0.5,0.2],'NO_MARGIN',1);
 animate_chain_with_joint_control_using_sliders(chain,... 
-    'fig_pos_robot',[0.5,0.4,0.4,0.5],'fig_pos_slider',[0.5,0.2,0.4,0.2],...
-    'PLOT_LINK',0,'PLOT_JOINT_AXIS',1,'PLOT_CAPSULE',0,'PLOT_JOINT_NAME',0,...
+    'fig_pos_robot',[0.5,0.5,0.4,0.5],'fig_pos_slider',[0.5,0.2,0.4,0.2],...
+    'PLOT_MESH',1,'PLOT_LINK',1,'PLOT_JOINT_AXIS',1,'PLOT_CAPSULE',0,'PLOT_JOINT_NAME',0,...
     'PLOT_COM',0,'PRINT_JOINT_POS',0,'AXIS_OFF',1,'NO_MARGIN',1,'PLOT_GRAPH',0);
 
-%% 2. Coordinate Transformations
+%% Basic position, rotation, Coordinates
+ccc
+
+% Define a local coordinate {A}
+p = cv([1,1,1]); % position as a column vector
+R = rpy2r([30,0,0]*D2R); % rotation matrix from Euler angle
+T_A = pr2t(p,R);
+
+% Define the World coordinate
+T_W = pr2t('','');
+
+% Plot
+fig_idx = 1;
+set_fig(figure(fig_idx),'pos',[0.5,0.5,0.5,0.5],...
+    'view_info',[80,26],'axis_info',2*[-1,+1,-1,+1,-1,+1],'AXIS_EQUAL',1,'GRID_ON',1,...
+    'REMOVE_MENUBAR',1,'USE_DRAGZOOM',1,...
+    'SET_CAMLIGHT',1,'SET_MATERIAL','METAL','SET_AXISLABEL',1,'afs',18);
+plot_T(T_W,'fig_idx',fig_idx,'subfig_idx',1,...
+    'all',1.0,'alw',3,'text_str','~$\Sigma_W$','text_interp','latex','text_fs',25);
+plot_T(T_A,'fig_idx',fig_idx,'subfig_idx',2,...
+    'all',0.5,'alw',2,'text_str','~$\Sigma_A$','text_interp','latex','text_fs',25);
+
+%% Coordinate Transformations
 ccc
 %
 % T_W -> T_A -> T_B
@@ -116,7 +140,7 @@ plot_T(T_X_in_B,'fig_idx',fig_idx,'subfig_idx',4,...
     'PLOT_AXIS',0,'PLOT_SPHERE',1,'sr',0.05,'sfc','r','sfa',0.5);
 plot_title('In the Local Coordinate System B','fig_idx',fig_idx,'interpreter','latex','tfs',30);
 
-%% 3. Angular velocity vector \omega
+%% Angular velocity vector \omega
 ccc
 
 % Angular velocity vector
@@ -175,7 +199,7 @@ end
 plot_title('Rotated Angular Velocity Vector $R\omega$',...
     'fig_idx',fig_idx,'tfs',25,'interpreter','latex');
 
-%% 4. Convert R <=> w using Rodrigues' formula
+%% Convert R <=> w using Rodrigues' formula
 ccc
 
 R = rpy2r(360*D2R*rand(3,1)); % random rotation matrix
@@ -186,7 +210,7 @@ R2 = rodrigues(uv(w),norm(w)); % exp map
 fprintf('R:\n'); disp(R);
 fprintf('R2:\n'); disp(R2);
 
-%% 5. Interpolate rotation matrics
+%% Interpolate rotation matrics
 ccc
 
 % Get two random rotational matrices
@@ -237,7 +261,7 @@ for tick = 1:length(ts)
     end
 end
 
-%% 6. Translate and rotate objects in 3D space
+%% Translate and rotate objects in 3D space
 ccc
 warning('off','MATLAB:hg:DiceyTransformMatrix'); % remove rendering warnings
 
@@ -323,7 +347,7 @@ while true
     end
 end
 
-%% 7. Construct the kinematic chain
+%% Construct the kinematic chain
 %
 % Link parameters are specified in p.47.
 % Here, we will use the followings:

@@ -12,6 +12,8 @@ addParameter(ps,'PLOT_COM',0);
 addParameter(ps,'com_radius',0.05);
 addParameter(ps,'PRINT_JOINT_POS',1);
 
+addParameter(ps,'PLOT_MESH',true);                  % plot mesh
+
 addParameter(ps,'PLOT_LINK',true);                  % plot link
 addParameter(ps,'PLOT_CAPSULE',true);               % plot capsule
 addParameter(ps,'cfc',0.5*[1,1,1]);                 % capsule face color
@@ -58,6 +60,8 @@ q_rev               = ps.Results.q_rev;
 PLOT_COM            = ps.Results.PLOT_COM;
 com_radius          = ps.Results.com_radius;
 PRINT_JOINT_POS     = ps.Results.PRINT_JOINT_POS;
+
+PLOT_MESH           = ps.Results.PLOT_MESH;
 
 PLOT_LINK           = ps.Results.PLOT_LINK;
 PLOT_CAPSULE        = ps.Results.PLOT_CAPSULE;
@@ -149,7 +153,7 @@ while true % loop
     fig = plot_chain(chain,'fig_idx',1,'subfig_idx',1,'fig_pos',fig_pos_robot,...
         'view_info',[88,16],'axis_info',chain.axis_info,'AXIS_OFF',AXIS_OFF,'AXIS_EQUAL',1,'USE_ZOOMRATE',1,...
         'PLOT_LINK',PLOT_LINK,'llc','k','llw',1,'lls','-',...
-        'PLOT_MESH',1,'mfc','','mfa',0.5,...
+        'PLOT_MESH',PLOT_MESH,'mfc','','mfa',0.5,...
         'PLOT_BOX',1,'bfc','m','bfa',0.7,...
         'PLOT_CAPSULE',PLOT_CAPSULE,'cfc',cfc,'cfa',cfa,'cec',cec,'cea',cea,...
         'PLOT_BOX_ADDED',1,'bafa',0.4,...
