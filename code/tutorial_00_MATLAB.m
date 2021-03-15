@@ -1,6 +1,6 @@
 %
 % MATLAB tutorial
-% 
+%
 ccc
 %% CCC
 ccc % abbreviation for clc, clear all, and close all
@@ -14,11 +14,11 @@ d = [1,2;3,4];
 
 %% Print
 ccc
-fprintf('Hello, World.\n');
-fprintf("Hello, World.\n"); % bot works 
+fprintf(2,'Hello, World.\n');
+fprintf("Hello, World.\n"); % bot works
 disp('Hello, World.');
 str = 'Hello, World.';
-fprintf("%s\n",str);
+fprintf("%s [%d] [%.3f] \n",str,123,123.4567);
 
 %% Simple plot
 ccc
@@ -29,5 +29,5 @@ title('Plot Lines','fontsize',15);
 xlabel('X'); ylabel('Y');
 grid on; drawnow;
 
-%% That's it. For the rest of functionalities, check out yourself. 
+%% That's it. For the rest of functionalities, check out yourself.
 ccc

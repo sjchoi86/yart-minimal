@@ -7,17 +7,17 @@ cache_folder = '../cache/';
 chain = get_chain_from_urdf_with_caching(robot_name,'RE',0,'SKIP_CAPSULE',0,...
     'urdf_path',urdf_path,'cache_folder',cache_folder);
 plot_chain_graph(chain,'fig_idx',2,'fig_pos',[0.5,0.0,0.5,0.2],'NO_MARGIN',1);
-animate_chain_with_joint_control_using_sliders(chain,... 
+animate_chain_with_joint_control_using_sliders(chain,...
     'fig_pos_robot',[0.5,0.5,0.4,0.5],'fig_pos_slider',[0.5,0.2,0.4,0.2],...
-    'PLOT_MESH',1,'PLOT_LINK',1,'PLOT_JOINT_AXIS',1,'PLOT_CAPSULE',0,'PLOT_JOINT_NAME',0,...
+    'PLOT_MESH',0,'PLOT_LINK',1,'PLOT_JOINT_AXIS',1,'PLOT_CAPSULE',0,'PLOT_JOINT_NAME',0,...
     'PLOT_COM',0,'PRINT_JOINT_POS',0,'AXIS_OFF',1,'NO_MARGIN',1,'PLOT_GRAPH',0);
 
 %% Basic position, rotation, Coordinates
 ccc
 
 % Define a local coordinate {A}
-p = cv([1,1,1]); % position as a column vector
-R = rpy2r([30,0,0]*D2R); % rotation matrix from Euler angle
+p = cv([0.5,1,1]); % position as a column vector
+R = rpy2r(360*rand(1,3)*D2R); % rotation matrix from Euler angle
 T_A = pr2t(p,R);
 
 % Define the World coordinate
@@ -25,7 +25,7 @@ T_W = pr2t('','');
 
 % Plot
 fig_idx = 1;
-set_fig(figure(fig_idx),'pos',[0.5,0.5,0.5,0.5],...
+set_fig(figure(fig_idx),'pos',[0.0,0.5,0.5,1.0],...
     'view_info',[80,26],'axis_info',2*[-1,+1,-1,+1,-1,+1],'AXIS_EQUAL',1,'GRID_ON',1,...
     'REMOVE_MENUBAR',1,'USE_DRAGZOOM',1,...
     'SET_CAMLIGHT',1,'SET_MATERIAL','METAL','SET_AXISLABEL',1,'afs',18);
@@ -42,7 +42,7 @@ ccc
 
 % Initialize World Coordinate {W} and local coordinates, {A}, {B}, and {C}
 T_W = pr2t('',''); % world coordinates {W}
-T_A_in_W = pr2t(cv([0,1,0]),rpy2r([30,0,30]*D2R)); % Local coordinates {A} in {W}
+T_A_in_W = pr2t(cv([0,1,0]),rpy2r([30,0,0]*D2R)); % Local coordinates {A} in {W}
 T_B_in_A = pr2t(cv([0,0,1]),rpy2r([0,30,0]*D2R)); % Local coordinates {B} in {A}
 
 % Coordinate transfrom: Pre-multiply
@@ -139,6 +139,74 @@ plot_line(t2p(T_B_in_B),t2p(T_X_in_B),'fig_idx',fig_idx,'subfig_idx',3,...
 plot_T(T_X_in_B,'fig_idx',fig_idx,'subfig_idx',4,...
     'PLOT_AXIS',0,'PLOT_SPHERE',1,'sr',0.05,'sfc','r','sfa',0.5);
 plot_title('In the Local Coordinate System B','fig_idx',fig_idx,'interpreter','latex','tfs',30);
+
+%% Coordinate Transformations (again)
+%
+% Post-multiplication : local transformation
+% Pre-multiplication  : global transformation
+%
+ccc
+
+% Configuration
+transform_type = 'Local'; % 'Global', 'Local'
+rotation_axis  = 'Z'; % 'X', 'Y', 'Z'
+
+% Random homogeneous transformation matrix
+T_w = pr2t(cv(-1+2*rand(1,3)),rpy2r(360*rand(1,3)*D2R));
+root_traj = []; x_traj = []; y_traj = []; z_traj = [];
+tick = 0; max_tick = 360;
+while 1
+    if tick < max_tick
+        tick = tick + 1;
+    end
+    % Coordinate transform
+    switch rotation_axis
+        case 'X'
+            T_w2a = pr2t(cv([0,0,0]),rpy2r(tick*[1,0,0]*D2R)); % rotate w.r.t. x-axis
+        case 'Y'
+            T_w2a = pr2t(cv([0,0,0]),rpy2r(tick*[0,1,0]*D2R)); % rotate w.r.t. y-axis
+        case 'Z'
+            T_w2a = pr2t(cv([0,0,0]),rpy2r(tick*[0,0,1]*D2R)); % rotate w.r.t. z-axis
+    end
+    switch lower(transform_type)
+        case 'global'
+            T_a = T_w2a*T_w; % pre-multiplication (global)
+        case 'local'
+            T_a = T_w*T_w2a; % post-multiplication (local)
+    end
+    
+    R_t = t2r(T_a); % get the rotation matrix
+    % Append the axes trajectories
+    root_traj   = [root_traj; rv(t2p(T_a))];
+    x_traj      = [x_traj; rv(t2p(T_a)) + 0.5*rv(R_t(:,1))];
+    y_traj      = [y_traj; rv(t2p(T_a)) + 0.5*rv(R_t(:,2))];
+    z_traj      = [z_traj; rv(t2p(T_a)) + 0.5*rv(R_t(:,3))];
+    % Animate
+    if mod(tick,5) == 0 % animate
+        fig = set_fig(figure(1),'pos',[0.6,0.4,0.3,0.5],...
+            'view_info',[80,26],'axis_info',1.6*[-1,+1,-1,+1,-1,+1],'AXIS_EQUAL',1,'GRID_ON',1,...
+            'REMOVE_MENUBAR',1,'USE_DRAGZOOM',1,'SET_CAMLIGHT',1,'SET_MATERIAL','METAL',...
+            'SET_AXISLABEL',1,'afs',18,'interpreter','latex','NO_MARGIN',0);
+        plot_T(pr2t(cv([0,0,0]),eye(3,3)),'fig_idx',1,'subfig_idx',1,...
+            'PLOT_AXIS',1,'all',1.0,'alw',3,'PLOT_SPHERE',0,...
+            'text_str','World','text_fs',20,'text_interp','latex'); % world coordinate
+        plot_T(T_w,'fig_idx',1,'subfig_idx',2,...
+            'PLOT_AXIS',1,'all',0.5,'alw',2,'PLOT_SPHERE',0); % initial coordinate
+        plot_T(T_a,'fig_idx',1,'subfig_idx',3,...
+            'PLOT_AXIS',1,'all',0.5,'alw',2,'PLOT_AXIS_TIP',1,'atr',0.05,...
+            'PLOT_SPHERE',1,'sr',0.03,'sfc','k',...
+            'text_str','T','text_fs',20,'text_interp','latex'); % transformed coordinate
+        plot_traj(root_traj,'fig_idx',1,'subfig_idx',1,'tlc','k','tlw',3);
+        plot_traj(x_traj,'fig_idx',1,'subfig_idx',2,'tlc','r','tlw',1);
+        plot_traj(y_traj,'fig_idx',1,'subfig_idx',3,'tlc','g','tlw',1);
+        plot_traj(z_traj,'fig_idx',1,'subfig_idx',4,'tlc','b','tlw',1);
+        title_str = sprintf('[%d/%d] %s Transform w.r.t. %s axis',tick,max_tick,transform_type,rotation_axis);
+        plot_title(title_str,'tfs',20,'interpreter','latex');
+        drawnow;
+        if ~ishandle(fig), break; end
+    end % if mod(tick,5) == 0 % animate
+end % for tick = 1:360 % for each tick
+fprintf('Done.\n');
 
 %% Angular velocity vector \omega
 ccc
@@ -321,7 +389,7 @@ while true
         % Plot an arrow from {W} to {A}
         sw = 0.01; tw = 0.03; % stem width and tip width
         plot_arrow_3d('',t2p(T_A_in_W),'fig_idx',1,'subfig_idx',1,'color',[0,0,0],...
-            'sw',sw,'tw',tw,'text_str','~$p_A$','text_fs',20,'text_color','k','interpreter','latex'); 
+            'sw',sw,'tw',tw,'text_str','~$p_A$','text_fs',20,'text_color','k','interpreter','latex');
         % Plot the axis of rotation and directional velocity of {A}
         sw = 0.02; tw = 0.05;
         plot_arrow_3d(p_A_in_W,p_A_in_W+0.5*a_in_W,'fig_idx',1,'subfig_idx',2,'color','b',...
@@ -484,8 +552,140 @@ while tick < 1e4 % loop
 end % while 1 % loop
 fprintf('Done.\n');
 
-%%
+%% Inverse Kinematics with Interactive Marker
+%
+% ik_info = init_ik_info(chain,...);
+%
+% ik_info = add_ik_info(ik_info,...);
+% ik_info = add_ik_info(ik_info,...);
+% ik_info = add_ik_info(ik_info,...);
+% ...
+% [dq,joint_names_to_ctrl] = one_step_ik(chain,ik_info);
+% ...
+% q = get_q_chain(chain,joint_names_to_ctrl);
+% q = q + dq;
+% chain = update_chain_q(chain,joint_names_to_ctrl,q);
+%
+ccc
 
+% IK configuration
+CONSIDER_JOINT_LIMIT = 1; % consider joint limit while solving IK
+
+% Initialize robot
+robot_name = 'iiwa7'; % 'coman', 'iiwa7'
+chain = get_chain_from_urdf_with_caching(robot_name,'RE',0,'SKIP_CAPSULE',0);
+chain = add_joi_to_robot(chain);
+chain.joi = get_joi_chain(chain);
+chain.sc_checks = get_sc_checks(chain,'collision_margin',max(chain.sz.xyz_len)/100);
+T_joi = get_t_joi(chain,chain.joi);
+
+switch robot_name
+    case 'coman'
+        joi_ik_trgts = {'rh','lh','re','le'}; % specify IK targets in terms of JOI
+        joi_ik_types = {'IK_P','IK_P','IK_P','IK_P'};
+        ik_weights   = {1,1,1,1};
+    case 'iiwa7'
+        joi_ik_trgts = {'rh'};
+        joi_ik_types = {'IK_PR'};
+        ik_weights   = {1};
+    otherwise
+        joi_ik_trgts = {};
+        joi_ik_types = {};
+        ik_weights   = {};
+end
+
+% Initialize IK targets
+ik_info = init_ik_info(chain,...
+    'joint_names_to_ctrl',chain.rev_joint_names,...
+    'ik_err_th',1.0,...
+    'dq_th',50*D2R,...
+    'step_size',0.2,...
+    'lambda_rate',0.001,...
+    'lambda_min',1e-6,...
+    'lambda_max',0.1 ...
+    );
+for ik_idx = 1:length(joi_ik_trgts) % append IK targets
+    joi_ik_trgt = joi_ik_trgts{ik_idx};
+    joi_ik_type = joi_ik_types{ik_idx};
+    joint_idx = chain.joi.idxs(idx_cell(chain.joi.types,joi_ik_trgt));
+    joint_name = chain.joint_names{joint_idx};
+    % Add information information
+    ik_info = add_ik_info(ik_info,...
+        'joint_name',joint_name,...
+        'type',joi_ik_type,...
+        'weight',ik_weights{ik_idx},...
+        'coord',getfield(T_joi,joi_ik_trgt)...
+        );
+end
+
+% Animate
+plot_chain(chain,'fig_idx',1,'fig_pos',[0.5,0.4,0.5,0.6],'mfc','','axis_info',chain.axis_info);
+axis off;
+for ik_idx = 1:ik_info.n_trgt
+    plot_interactive_marker('fig_idx',1,'subfig_idx',ik_idx,...
+        'T',ik_info.trgt_coords{ik_idx},'clen',0.2,'sr',0.02);
+end
+tick = 0;
+while 1 % loop
+    
+    % Update IK target coordinates from interactive markers
+    tick = tick + 1;
+    for ik_idx = 1:ik_info.n_trgt
+        T_i = g_im{ik_idx}.T;
+        ik_info.trgt_coords{ik_idx} = T_i;
+    end
+    
+    % Compute dq with one-step IK
+    [dq,joint_names_to_ctrl,J_use,ik_err,det_J] = one_step_ik(chain,ik_info,...
+        'CONSIDER_JOINT_LIMIT',CONSIDER_JOINT_LIMIT,...
+        'UNIT_DQ_HEURISTIC',0,'unit_dq_rad',2*D2R);
+    
+    % Update chain with dq computed from IK
+    q = get_q_chain(chain,joint_names_to_ctrl);
+    q = q + dq;
+    chain = update_chain_q(chain,joint_names_to_ctrl,q,'IGNORE_LIMIT',0);
+    
+    % Animate robot with IK targets using interactive markers
+    plot_every = 5;
+    if mod(tick,plot_every) == 0
+        fig = plot_chain(chain,'fig_idx',1,'cfc','');
+        ik_plot_info = get_ik_plot_info_from_ik_info(ik_info);
+        plot_ik_targets('chain_robot',chain,'ik_plot_info',ik_plot_info,'sr',0.02,...
+            'PLOT_AXIS',0,'all',0.2,...
+            'PLOT_ARROW',0,'adl',0.2,'adsw',0.02,'adtw',0.04);
+        if CONSIDER_JOINT_LIMIT
+            title_str = sprintf(['[Consider Joint Limit] Tick:[%d] IK error:[%.3f]',...
+                '\n(Press [t]:toggle [q]:quit)'],...
+                tick,norm(ik_err));
+            plot_title_with_text(title_str,'fig_idx',1,'tfs',20,'tfc','b','interpreter','latex');
+        else
+            title_str = sprintf(['[Naive IK] Tick:[%d] IK error:[%.3f]',...
+                '\n(Press [t]:toggle [q]:quit)'],...
+                tick,norm(ik_err));
+            plot_title_with_text(title_str,'fig_idx',1,'tfs',20,'tfc','k','interpreter','latex');
+        end
+        drawnow; if ~ishandle(fig), break; end
+    end
+    
+    % Toggle 'CONSIDER_JOINT_LIMIT' with keyboard inputs
+    % Keyboard handler
+    if ~isempty(g_key) % if key pressed
+        switch g_key
+            case 'q'       % press 'q' to quit
+                break;
+            case 't'       % press 't' to toggle 'CONSIDER_JOINT_LIMIT'
+                CONSIDER_JOINT_LIMIT = ~CONSIDER_JOINT_LIMIT;
+        end
+        g_key = ''; % reset key pressed
+    end % if ~isempty(g_key) % if key pressed
+    
+end % while 1 % loop
+if ishandle(fig)
+    plot_title_with_text('Terminated','fig_idx',1,'tfs',15,'tfc','r');
+end
+fprintf('Done.\n');
+
+%%
 
 
 

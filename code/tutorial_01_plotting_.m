@@ -13,15 +13,17 @@ ccc
 %% Make figure and change title
 ccc
 for tick = 1:100 % loop
-    fig = set_fig(figure(1),'pos',[0.5,0.5,0.3,0.45],...
+    fig_idx = 1;
+    fig = set_fig(figure(fig_idx),'pos',[0.5,0.5,0.3,0.45],...
         'view_info',[80,26],'axis_info',[-1,+1,-1,+1,-1,+1],'AXIS_EQUAL',1,'GRID_ON',1,...
         'REMOVE_MENUBAR',1,'USE_DRAGZOOM',1,...
         'SET_CAMLIGHT',1,'SET_MATERIAL','METAL','SET_AXISLABEL',1,'afs',18);
     % Plot title
     title_str = sprintf('[%d] Figure $f(x) = \\exp(x)$',tick);
-    plot_title(title_str,'fig_idx',1,...
+    plot_title(title_str,'fig_idx',fig_idx,...
         'tfs',35,'tfc','k','interpreter','latex');
-    drawnow; if ~ishandle(fig), break; end
+    drawnow; 
+    if ~ishandle(fig), break; end
 end % for tick = 1:100 % loop
 
 %% Plot coordinates
@@ -94,7 +96,7 @@ while true
             'all',0.1,'text_str','~$\Sigma_c$','text_interp','latex','USE_ZOOMRATE',1);
         % Plot cube
         xyz_min = cv([0,0,0]);
-        xyz_len = cv([0.3,0.5,0.8]);
+        xyz_len = cv([0.5,0.5,0.5]);
         plot_cube(T_cube,xyz_min,xyz_len,'fig_idx',1,'subfig_idx',1,...
             'bfc','b','bfa',0.3,'bec','k');
         % Plot title
