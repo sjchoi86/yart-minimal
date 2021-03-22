@@ -22,7 +22,8 @@ while 1
     if isempty(parent_idx)
         break;
     end
-    idx_route = [idx_route; parent_idx]; % append parent
+    idx_route = cat(1,idx_route,parent_idx); % append parent
     idx_temp = parent_idx;
 end
 idx_route = flipud(idx_route); % flip to get base node to the end-effector
+

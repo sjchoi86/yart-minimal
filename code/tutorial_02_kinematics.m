@@ -576,7 +576,7 @@ chain = add_joint_to_chain(chain,'name','J5','parent_name','J4',...
 chain = add_joint_to_chain(chain,'name','J6','parent_name','J5',...
     'p_offset',cv([0,0,0.5]),'a',cv([0,1,0]));
 chain = add_joint_to_chain(chain,'name','J7','parent_name','J6',...
-    'p_offset',cv([0,0,0.5]),'a',cv([0,1,0]));
+    'p_offset',cv([0,0,0.5]),'a',cv([1,0,0]));
 chain = add_joint_to_chain(chain,'name','EE','parent_name','J7',...
     'p_offset',cv([0,0,0.2]),'a',cv([0,0,0]));
 chain = add_joint_to_chain(chain,'name','EE_R','parent_name','EE',...
@@ -605,10 +605,12 @@ chain = add_link_to_chain(chain,'name','EE_L_link','joint_name','EE_L','box_adde
 q = 1e-6*randn(chain.n_rev_joint,1);
 chain = update_chain_q(chain,chain.rev_joint_names,q);
 
-% First, let's compute the Jacobian
 % Joint names to control
 joint_names_to_ctrl = chain.rev_joint_names;
-joint_idxs_to_ctrl = idxs_cell(chain.joint_names,joint_names_to_ctrl);
+
+% Remove certain joints
+% joint_names_to_ctrl(idx_cell(joint_names_to_ctrl,'J1')) = [];
+% joint_names_to_ctrl(idx_cell(joint_names_to_ctrl,'J2')) = [];
 
 % Target joint name
 joint_name_trgt = 'EE';
@@ -619,9 +621,11 @@ T_trgt_goal = pr2t(...
     rpy2r([0,180,0]*D2R)*get_r_chain(chain,joint_name_trgt)...
     );
 
-ee_traj = []; run_mode = 'STOP'; tfc = 'k'; max_tick = 1e4;
-for tick = 1:max_tick % loop
+% Loop
+ee_traj = []; run_mode = 'STOP'; tfc = 'k'; tick = 0;
+while true
     if isequal(run_mode,'RUN')
+        tick = tick + 1;
         
         % Get the current target joint position
         p_trgt_curr = chain.joint(idx_cell(chain.joint_names,joint_name_trgt)).p;
@@ -631,19 +635,22 @@ for tick = 1:max_tick % loop
         joint_idxs_route = get_idx_route(chain,joint_name_trgt);
         
         % Intersect 'joint_idxs_route' with 'joint_idxs_to_control' to get actual using indices
+        joint_idxs_to_ctrl = idxs_cell(chain.joint_names,joint_names_to_ctrl);
         joint_idxs_use = intersect(joint_idxs_route,joint_idxs_to_ctrl);
         n_use = length(joint_idxs_use);
         
         % Compute the Jacobian matrix (2.74)
         n_ctrl = length(joint_names_to_ctrl);
-        J = zeros(6,n_ctrl);
+        J = zeros(6,n_ctrl); 
         for i_idx = 1:n_ctrl % along the joint route
             joint_idx_to_ctrl = joint_idxs_to_ctrl(i_idx);
-            parent = chain.joint(joint_idx_to_ctrl).parent;         % parent joint index
-            p_joint_ctrl = chain.joint(joint_idx_to_ctrl).p;        % joint position
-            R_offset = chain.joint(joint_idx_to_ctrl).R_offset;     % current joint's rotation offset
+            parent = chain.joint(joint_idx_to_ctrl).parent;       % parent joint index
+            p_joint_ctrl = chain.joint(joint_idx_to_ctrl).p;      % joint position
+            R_offset = chain.joint(joint_idx_to_ctrl).R_offset;   % current joint's rotation offset
+            
             % Rotation axis in the world coordinate 
             a = chain.joint(parent).R * R_offset * chain.joint(joint_idx_to_ctrl).a;
+            
             % 'idx_append': which column to append
             joint_name_append = chain.joint_names{joint_idx_to_ctrl};
             idx_append = idx_cell(joint_names_to_ctrl,joint_name_append); % which column to append
@@ -657,20 +664,21 @@ for tick = 1:max_tick % loop
         p_err_weight = 1;
         w_err_weight = 1;
         [p_trgt_goal,R_trgt_goal] = t2pr(T_trgt_goal);
-        p_err = p_trgt_goal-p_trgt_curr;
+        p_err = p_trgt_goal - p_trgt_curr;
         w_err = R_trgt_curr * r2w(R_trgt_curr' * R_trgt_goal);
         ik_err = [p_err_weight*p_err; w_err_weight*w_err];
         ik_err_avg = mean(abs(ik_err));
         
         % Compute dq
-        lambda = 0.1*ik_err_avg+1e-4; % damping term
+        lambda = 0.1*ik_err_avg+1e-4; % damping term proportional to the error
         dq = (J'*J + lambda*eye(n_ctrl,n_ctrl)) \ J' * ik_err;
         step_size = 1.0;
         dq = trim_scale(step_size*dq,10*D2R);
         
         % Update
+        q = get_q_chain(chain,joint_names_to_ctrl);
         q = q + dq;
-        chain = update_chain_q(chain,chain.rev_joint_names,q);
+        chain = update_chain_q(chain,joint_names_to_ctrl,q);
         
         % Append end-effector trajectory
         ee_traj = cat(1,ee_traj,rv(chain.joint(idx_cell(chain.joint_names,'EE')).p));
@@ -685,7 +693,7 @@ for tick = 1:max_tick % loop
             'view_info',[68,16],'axis_info',[-2.5,+2.5,-2.5,+2.5,0,+4.5],'USE_ZOOMRATE',1,...
             'PLOT_LINK',1,'llc','k','llw',2,'lls','-',...
             'PLOT_BOX_ADDED',1,...
-            'PLOT_JOINT_AXIS',1,'jal',0.1,'jalw',2,'jals','-',...
+            'PLOT_JOINT_AXIS',1,'jal',0.2,'jalw',3,'jals','-',...
             'PLOT_JOINT_SPHERE',1,'jsr',0.02,'jsfc','k','jsfa',0.75,...
             'PLOT_ROTATE_AXIS',1,'ral',0.5,'rac','','raa',0.75,...
             'PLOT_JOINT_NAME',0 ...
