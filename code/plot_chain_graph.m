@@ -14,8 +14,6 @@ addParameter(ps,'max_str_len',inf);
 addParameter(ps,'title_str',chain.name);
 addParameter(ps,'title_fs',15);
 addParameter(ps,'interpreter','none');
-addParameter(ps,'x_margin',0.1);
-addParameter(ps,'y_margin',0.1);
 addParameter(ps,'NO_MARGIN',0);
 parse(ps,varargin{:});
 fig_idx     = ps.Results.fig_idx;
@@ -27,8 +25,6 @@ max_str_len = ps.Results.max_str_len;
 title_str   = ps.Results.title_str;
 title_fs    = ps.Results.title_fs;
 interpreter = ps.Results.interpreter;
-x_margin    = ps.Results.x_margin;
-y_margin    = ps.Results.y_margin;
 NO_MARGIN   = ps.Results.NO_MARGIN;
 
 n = chain.n_joint; % number of joint
@@ -88,11 +84,13 @@ switch interpreter
     case 'latex'
         title_str = strrep(title_str,'_','-'); % replace '_' with '-'
 end
-% title(title_str,'fontsize',title_fs,'fontname','Consolas','interpreter',interpreter);
-plot_title_with_text(title_str,'fig_idx',fig_idx,...
-    'tfs',title_fs,'tfn','Consolas','interpreter',interpreter);
-xlim([min(x)-x_margin,1+x_margin/2]);
-ylim([-y_margin/2,1+y_margin]);
+title(title_str,'fontsize',title_fs,'fontname','Consolas','interpreter',interpreter);
+% plot_title_with_text(title_str,'fig_idx',fig_idx,...
+%     'tfs',title_fs,'tfn','Consolas','interpreter',interpreter);
+xlim([0,1]);
+ylim([0,1]);
+% xlim([min(x)-x_margin,1+x_margin]);
+% ylim([-y_margin/2,1+y_margin]);
 set(gcf,'Color','w'); % background color to white 
 axis off;
 dragzoom;
