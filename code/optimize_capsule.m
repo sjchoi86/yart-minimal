@@ -38,14 +38,12 @@ cap_opt.radius = radius_opt;
 cap_opt.fval = fval;
 end
 
-
 function f = myfun(x)
 e1 = x(1:3);
 e2 = x(4:6);
 r = x(7);
 f = norm(e2-e1)*pi*r^2 + 4/3*pi*r^3;
 end
-
 
 function [c,ceq] = mycon(x,pdata,use_vector_operation)
 e1 = x(1:3);
