@@ -209,7 +209,7 @@ end % for i_idx = 1:chain.n_link % for all links
 
 %% Plot chain
 ca;
-plot_chain(chain,'PLOT_JOINT_AXIS',1);
+plot_chain(chain,'PLOT_JOINT_AXIS',1,'mfc','');
 
 %% Optimize capsules
 ca
