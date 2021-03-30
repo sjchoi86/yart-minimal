@@ -1,3 +1,20 @@
+%
+% List
+% 
+% Show and control of some robots
+% Basic position, rotation, Coordinates
+% Coordinate Transformations
+% Coordinate Transformations (again)
+% Angular velocity vector $\omega$
+% Convert R <=> w using Rodrigues' formula
+% Interpolate rotation matrics using Rodrigues' formula
+% Translate and rotate objects in 3D space
+% Construct the kinematic chain
+% Numerical inverse kinematics with Jacobian
+% Inverse Kinematics with Interactive Marker
+% Nullspace projected IK with joint space target
+% Nullspace projected IK with task space target
+%
 ccc
 %% Show and control of some robots
 ccc
@@ -208,7 +225,7 @@ while 1
 end % for tick = 1:360 % for each tick
 fprintf('Done.\n');
 
-%% Angular velocity vector \omega
+%% Angular velocity vector $\omega$
 ccc
 
 % Angular velocity vector
@@ -278,7 +295,7 @@ R2 = rodrigues(uv(w),norm(w)); % exp map
 fprintf('R:\n'); disp(R);
 fprintf('R2:\n'); disp(R2);
 
-%% Interpolate rotation matrics
+%% Interpolate rotation matrics using Rodrigues' formula
 ccc
 
 % Get two random rotational matrices
