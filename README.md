@@ -5,6 +5,7 @@ It contains
 - Parsing a kinematic chain from universal robot description format (URDF) files
 - Forward Kinematics 
 - Inverse Kinematics 
+- Null space projected IK 
 - Checking self-collisions with capsule representations 
 
 
