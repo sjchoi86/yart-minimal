@@ -1,13 +1,19 @@
 # Tutorial of Yet Another Robotics Toolbox (YART)
 
 It contains
-- Coordinate transforms 
-- Building a kinematic chain from scratch
-- Parsing a kinematic chain from universal robot description format (URDF) files
-- Forward Kinematics 
-- Inverse Kinematics 
-- Null space projected IK 
-- Checking self-collisions with capsule representations 
+- Show and control of some robots
+- Basic position, rotation, Coordinates
+- Coordinate Transformations
+- Coordinate Transformations (the second perspectives)
+- Angular velocity vector $\omega$
+- Convert R <=> w using Rodrigues' formula
+- Interpolate rotation matrics using Rodrigues' formula
+- Translate and rotate objects in 3D space
+- Construct the kinematic chain
+- Numerical inverse kinematics with Jacobian
+- Inverse Kinematics with Interactive Marker
+- Nullspace projected IK with joint space target
+- Nullspace projected IK with task space target
 
 
 Most of the codes are built from the scratch, mainly for education purposes (Yes, codes are not fully optimized). 
