@@ -1,4 +1,4 @@
-# Yet Another Robotics Tutorial
+# Tutorial of Yet Another Robotics Toolbox (YART)
 
 It contains
 - Coordinate transforms 
@@ -11,5 +11,7 @@ It contains
 
 
 Most of the codes are built from the scratch, mainly for education purposes (Yes, codes are not fully optimized). 
+
+Full version of YART will be released via separate repo. 
 
 Contact: sungjoon-choi@korea.ac.kr 
