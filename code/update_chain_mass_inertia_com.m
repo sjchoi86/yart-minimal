@@ -31,4 +31,3 @@ for i_idx = 1:chain.n_link % for all links
         chain.link(i_idx).com_bar = cv([0,0,0]);            % com w.r.t. local coordinates
     end
 end % for i_idx = 1:chain.n_link % for all links
-

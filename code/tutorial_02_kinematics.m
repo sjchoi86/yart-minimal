@@ -14,6 +14,7 @@
 % Inverse Kinematics with Interactive Marker
 % Nullspace projected IK with joint space target
 % Nullspace projected IK with task space target
+% Augmented Jacobian Method 
 %
 ccc
 %% Show and control of some robots
@@ -884,7 +885,7 @@ while 1 % loop
     
 end % while 1 % loop
 if ishandle(fig)
-    plot_title_with_text('Terminated','fig_idx',1,'tfs',15,'tfc','r');
+    plot_title_with_text('Terminated','fig_idx',1,'tfs',15,'tfc','r');x
 end
 fprintf('Done.\n');
 
@@ -966,7 +967,7 @@ chain = update_chain_mass_inertia_com(chain);
 % IK configuration
 joint_name_trgt = 'EE';
 IK_P            = 1;
-IK_R            = 0;
+IK_R            = 1;
 % Specify the target joint position
 T_trgt_goal = pr2t(...
     cv([0.4,0.2,-0.8])+get_p_chain(chain,joint_name_trgt),...
@@ -1012,8 +1013,8 @@ while 1
             if (ik_err_avg < 1e-3)
                 err_ns = (q_ns_des - q);
                 ik_err_ns_avg = mean(abs(err_ns));
-                % nullspace_proj = (eye(n_ctrl,n_ctrl) - pinv(J_use)*J_use);
-                nullspace_proj = (eye(n_ctrl,n_ctrl) - J_use'*pinv(J_use*J_use')*J_use);
+                nullspace_proj = (eye(n_ctrl,n_ctrl) - pinv(J_use)*J_use);
+                % nullspace_proj = (eye(n_ctrl,n_ctrl) - J_use'*pinv(J_use*J_use')*J_use);
                 dq_ns = nullspace_proj * err_ns;
                 dq = dq + dq_ns;
                 step_size = 0.1;
@@ -1183,8 +1184,8 @@ while 1
             if (ik_err_avg < 1e-1)
                 ik_err_ns_avg = mean(abs(ik_err_ns));
                 
-                % nullspace_proj = (eye(n_ctrl,n_ctrl) - pinv(J_use)*J_use);
-                nullspace_proj = (eye(n_ctrl,n_ctrl) - J_use'*pinv(J_use*J_use')*J_use);
+                nullspace_proj = (eye(n_ctrl,n_ctrl) - pinv(J_use)*J_use);
+                % nullspace_proj = (eye(n_ctrl,n_ctrl) - J_use'*pinv(J_use*J_use')*J_use);
                 
                 dq = dq + nullspace_proj*dq_ns; 
                 step_size = 1.0;
@@ -1250,6 +1251,161 @@ while 1
         g_key = ''; % reset key pressed
     end % if ~isempty(g_key) % if key pressed
     
+end
+fprintf('Done.\n');
+
+%% Augmented Jacobian Method 
+ccc
+
+% Initialize a kinematic chain
+chain = init_chain('name','kinematic_chain');
+chain = add_joint_to_chain(chain,'name','world');
+chain = add_joint_to_chain(chain,'name','J1','parent_name','world',...
+    'p_offset',cv([0,0,0.2]),'a',cv([0,0,1]));
+chain = add_joint_to_chain(chain,'name','J2','parent_name','J1',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,1,0]));
+chain = add_joint_to_chain(chain,'name','J3','parent_name','J2',...
+    'p_offset',cv([0,0,0.1]),'a',cv([1,0,0]));
+chain = add_joint_to_chain(chain,'name','J4','parent_name','J3',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,0,1]));
+chain = add_joint_to_chain(chain,'name','J5','parent_name','J4',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,1,0]));
+chain = add_joint_to_chain(chain,'name','J6','parent_name','J5',...
+    'p_offset',cv([0,0,0.1]),'a',cv([1,0,0]));
+chain = add_joint_to_chain(chain,'name','J7','parent_name','J6',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,0,1]));
+chain = add_joint_to_chain(chain,'name','J8','parent_name','J7',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,1,0]));
+chain = add_joint_to_chain(chain,'name','J9','parent_name','J8',...
+    'p_offset',cv([0,0,0.1]),'a',cv([1,0,0]));
+chain = add_joint_to_chain(chain,'name','EE','parent_name','J9',...
+    'p_offset',cv([0,0,0.1]),'a',cv([0,0,0]));
+
+% Add base floor
+BASE_COLOR = [0.6,0.4,0.2];
+box_added = struct('xyz_min',[-1,-1,0],'xyz_len',[2,2,0.03],...
+    'p_offset',cv([0,0,0]),'R_offset',rpy2r([0,0,0]*D2R),...
+    'color',BASE_COLOR,'alpha',0.3,'ec','k');
+chain = add_link_to_chain(chain,'name','base_link','joint_name','world','box_added',box_added);
+
+% Add end effector to the chain
+EE_COLOR   = [0.7,0.3,1.0];
+EE_ALPHA   = 0.7;
+EE_EC      = 'none';
+chain = add_joint_to_chain(chain,'name','EE_R','parent_name','EE',...
+    'p_offset',cv([0,0.05,0]),'a',cv([0,0,0]));
+chain = add_joint_to_chain(chain,'name','EE_L','parent_name','EE',...
+    'p_offset',cv([0,-0.05,0]),'a',cv([0,0,0]));
+box_added = struct('xyz_min',[-0.025,-0.05,-0.02],'xyz_len',[0.05,0.1,0.02],...
+    'p_offset',cv([0,0,0]),'R_offset',rpy2r([0,0,0]*D2R),...
+    'color',EE_COLOR,'alpha',EE_ALPHA,'ec',EE_EC);
+chain = add_link_to_chain(chain,'name','EE_link','joint_name','EE','box_added',box_added);
+box_added = struct('xyz_min',[-0.025,-0.01,-0.02],'xyz_len',[0.05,0.02,0.07],...
+    'p_offset',cv([0,0,0]),'R_offset',rpy2r([0,0,0]*D2R),...
+    'color',EE_COLOR,'alpha',EE_ALPHA,'ec',EE_EC);
+chain = add_link_to_chain(chain,'name','EE_R_link','joint_name','EE_R','box_added',box_added);
+box_added = struct('xyz_min',[-0.025,-0.01,-0.02],'xyz_len',[0.05,0.02,0.07],...
+    'p_offset',cv([0,0,0]),'R_offset',rpy2r([0,0,0]*D2R),...
+    'color',EE_COLOR,'alpha',EE_ALPHA,'ec',EE_EC);
+chain = add_link_to_chain(chain,'name','EE_L_link','joint_name','EE_L','box_added',box_added);
+
+% IK configuration
+joint_name_trgt1 = 'EE'; IK_P1 = 1; IK_R1 = 0;
+T_trgt_goal1 = pr2t(cv([0.4,0.2,-0.8])+get_p_chain(chain,joint_name_trgt1),'');
+joint_name_trgt2 = 'J6'; IK_P2 = 1; IK_R2 = 0;
+T_trgt_goal2 = pr2t(cv([0.2,-0.3+0.6*rand,0.4]),'');
+
+% Joint names to control
+joint_names_to_ctrl = chain.rev_joint_names;
+joint_idxs_to_ctrl = idxs_cell(chain.joint_names,joint_names_to_ctrl);
+n_ctrl = length(joint_names_to_ctrl);
+
+% Loop
+tick = 0; run_mode = 'STOP'; tfc = 'k'; q = zeros(n_ctrl,1);
+ik_err_avg = 0.0;
+while 1
+    % Run
+    switch run_mode
+        case 'RUN'
+            tick = tick + 1;
+            % Get IK ingredients
+            [J_use1,ik_err1] = get_ik_ingredients(chain,...
+                'joint_names_to_ctrl',joint_names_to_ctrl,...
+                'joint_idxs_to_ctrl',joint_idxs_to_ctrl,...
+                'joint_name_trgt',joint_name_trgt1,...
+                'T_trgt_goal',T_trgt_goal1,'IK_P',IK_P1,'IK_R',IK_R1,...
+                'p_err_weight',1.0,'w_err_weight',0.1,'ik_err_th',0.5);
+            [J_use2,ik_err2] = get_ik_ingredients(chain,...
+                'joint_names_to_ctrl',joint_names_to_ctrl,...
+                'joint_idxs_to_ctrl',joint_idxs_to_ctrl,...
+                'joint_name_trgt',joint_name_trgt2,...
+                'T_trgt_goal',T_trgt_goal2,'IK_P',IK_P2,'IK_R',IK_R2,...
+                'p_err_weight',1.0,'w_err_weight',0.1,'ik_err_th',0.5);
+            J_use = [J_use1;J_use2];
+            ik_err = [ik_err1;ik_err2];
+            ik_err_avg = mean(abs(ik_err));
+            dq = damped_ls(J_use,ik_err,...
+                'lambda_rate',0.01,'lambda_min',1e-6,...
+                'step_size',0.1,'dq_th',20*D2R);
+            step_size = 1.0;
+            dq = trim_scale(step_size*dq,10*D2R);
+            % Update
+            q = q + dq;
+            chain = update_chain_q(chain,joint_names_to_ctrl,q);
+        case 'STOP'
+        case 'QUIT'
+            plot_title('Terminated','fig_idx',1,'tfc','r');
+            break;
+    end
+    
+    % Animate
+    if mod(tick,5) == 0
+        fig = plot_chain(chain,'fig_idx',1,'subfig_idx',1,'fig_pos',[0.5,0.35,0.5,0.6],...
+            'view_info',[68,16],'axis_info',[-1.0,+1.0,-1.0,+1.0,0,+1.2],'USE_ZOOMRATE',1,...
+            'PLOT_LINK',1,'llc','k','llw',1,...
+            'PLOT_CAPSULE',1,'cfc',0.5*[1,1,1],'cfa',0.4,...
+            'PLOT_JOINT_AXIS',0,'jal',0.05,'jalw',2,'jals','-',...
+            'PLOT_JOINT_SPHERE',1,'jsr',0.01,...
+            'PLOT_JOINT_NAME',0,'jnfs',9);
+        plot_T(T_trgt_goal1,'fig_idx',1,'subfig_idx',1,...
+            'PLOT_AXIS',0,'all',0.15,'alw',3,'PLOT_AXIS_TIP',0,'atr',0.1,'USE_ZOOMRATE',1,...
+            'PLOT_SPHERE',1,'sr',0.05,'sfc','r','sfa',0.6);
+        plot_T(get_t_chain(chain,joint_name_trgt1),'fig_idx',1,'subfig_idx',2,...
+            'PLOT_AXIS',0,'all',0.15,'alw',3,'PLOT_AXIS_TIP',0,'atr',0.1,'USE_ZOOMRATE',1,...
+            'PLOT_SPHERE',1,'sr',0.05,'sfc','r','sfa',0.6);
+        plot_T(T_trgt_goal2,'fig_idx',1,'subfig_idx',3,...
+            'PLOT_AXIS',0,'all',0.15,'alw',3,'PLOT_AXIS_TIP',0,'atr',0.1,'USE_ZOOMRATE',1,...
+            'PLOT_SPHERE',1,'sr',0.05,'sfc','b','sfa',0.6);
+        plot_T(get_t_chain(chain,joint_name_trgt2),'fig_idx',1,'subfig_idx',4,...
+            'PLOT_AXIS',0,'all',0.15,'alw',3,'PLOT_AXIS_TIP',0,'atr',0.1,'USE_ZOOMRATE',1,...
+            'PLOT_SPHERE',1,'sr',0.05,'sfc','b','sfa',0.6);
+        title_str = sprintf('[%s] tick:[%d] err:[%.3f] (r:run s:stop q:quit 0:reset)',...
+            run_mode,tick,ik_err_avg);
+        plot_title(title_str,'fig_idx',1,'tfc',tfc,'tfs',20,'interpreter','latex');
+        drawnow; if ~ishandle(fig), break; end
+    end
+    
+    % Keyboard handler
+    if ~isempty(g_key) % if key pressed
+        switch g_key
+            case 'q' % press 'q' to quit
+                run_mode = 'QUIT';
+            case 's' % press 's' to stop
+                run_mode = 'STOP';
+                tfc      = 'k';
+            case 'r' % press 'r' to run
+                run_mode = 'RUN';
+                tfc      = 'b';
+            case '0' % press '0' to reset
+                q = zeros(n_ctrl,1);
+                chain = update_chain_q(chain,joint_names_to_ctrl,q);
+                T_trgt_goal1 = pr2t(...
+                    cv([0.5-rand,0.5-rand,-0.8])+get_p_chain(chain,joint_name_trgt1),'');
+                ik_err_avg = 0.0;
+                T_trgt_goal2 = pr2t(cv([0.2,-0.3+0.6*rand,0.4]),'');
+        end
+        g_key = ''; % reset key pressed
+    end % if ~isempty(g_key) % if key pressed
 end
 fprintf('Done.\n');
 
