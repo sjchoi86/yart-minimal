@@ -13,6 +13,11 @@ addParameter(ps,'com_radius',0.05);
 addParameter(ps,'PRINT_JOINT_POS',1);
 
 addParameter(ps,'PLOT_MESH',true);                  % plot mesh
+addParameter(ps,'mfc','');
+addParameter(ps,'mfa',0.5);
+
+addParameter(ps,'bfc','b');                         % box face color
+addParameter(ps,'bafc','');                         % box added face color
 
 addParameter(ps,'PLOT_LINK',true);                  % plot link
 addParameter(ps,'PLOT_CAPSULE',true);               % plot capsule
@@ -21,8 +26,8 @@ addParameter(ps,'cfa',0.2);                         % capsule face alpha
 addParameter(ps,'cec','none');                      % capsule edge color
 addParameter(ps,'cea',0.5);                         % capsule edge alpha
 
-addParameter(ps,'PLOT_JOINT_SPHERE',1);             % 
-addParameter(ps,'jsr',0.02);                        %   
+addParameter(ps,'PLOT_JOINT_SPHERE',1);             %
+addParameter(ps,'jsr',0.02);                        %
 
 addParameter(ps,'PLOT_JOINT_AXIS',false);           % joint joint coordinates
 addParameter(ps,'jal',0.1);                         % joint axis length
@@ -40,10 +45,10 @@ addParameter(ps,'jnfs',12);                         % joint name font size
 addParameter(ps,'jnfn','consolas');                 % joint name font name
 addParameter(ps,'jnfc','k');                        % joint name font color
 
-addParameter(ps,'AXIS_OFF',0);                        
-addParameter(ps,'NO_MARGIN',0);                        
+addParameter(ps,'AXIS_OFF',0);
+addParameter(ps,'NO_MARGIN',0);
 
-addParameter(ps,'PLOT_GRAPH',0);                        
+addParameter(ps,'PLOT_GRAPH',0);
 
 parse(ps,varargin{:});
 
@@ -62,6 +67,11 @@ com_radius          = ps.Results.com_radius;
 PRINT_JOINT_POS     = ps.Results.PRINT_JOINT_POS;
 
 PLOT_MESH           = ps.Results.PLOT_MESH;
+mfc                 = ps.Results.mfc;
+mfa                 = ps.Results.mfa;
+
+bfc                 = ps.Results.bfc;
+bafc                = ps.Results.bafc;
 
 PLOT_LINK           = ps.Results.PLOT_LINK;
 PLOT_CAPSULE        = ps.Results.PLOT_CAPSULE;
@@ -153,10 +163,10 @@ while true % loop
     fig = plot_chain(chain,'fig_idx',1,'subfig_idx',1,'fig_pos',fig_pos_robot,...
         'view_info',[88,16],'axis_info',chain.axis_info,'AXIS_OFF',AXIS_OFF,'AXIS_EQUAL',1,'USE_ZOOMRATE',1,...
         'PLOT_LINK',PLOT_LINK,'llc','k','llw',1,'lls','-',...
-        'PLOT_MESH',PLOT_MESH,'mfc','','mfa',0.5,...
-        'PLOT_BOX',1,'bfc','m','bfa',0.7,...
+        'PLOT_MESH',PLOT_MESH,'mfc',mfc,'mfa',mfa,...
+        'PLOT_BOX',1,'bfc',bfc,'bfa',0.7,...
         'PLOT_CAPSULE',PLOT_CAPSULE,'cfc',cfc,'cfa',cfa,'cec',cec,'cea',cea,...
-        'PLOT_BOX_ADDED',1,'bafa',0.4,...
+        'PLOT_BOX_ADDED',1,'bafc',bafc,'bafa',0.4,...
         'PLOT_COM',0,'csc','r','csr',0.01,...
         'PLOT_JOINT_AXIS',PLOT_JOINT_AXIS,'jal',jal,'jalw',jalw,'jals',jals,...
         'PLOT_JOINT_SPHERE',PLOT_JOINT_SPHERE,'jsr',jsr,'jsfc','k','jsfa',0.5,...

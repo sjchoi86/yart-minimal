@@ -73,12 +73,13 @@ addParameter(ps,'bfa',0.5);                         % box face alpha
 addParameter(ps,'bec','none');                      % box edge color
 
 addParameter(ps,'PLOT_CAPSULE',false);              % plot capsule
-addParameter(ps,'cfc',[0.7,0.7,0.99]);                 % capsule face color
+addParameter(ps,'cfc',[0.7,0.7,0.99]);              % capsule face color
 addParameter(ps,'cfa',0.2);                         % capsule face alpha
 addParameter(ps,'cec','none');                      % capsule edge color
 addParameter(ps,'cea',0.5);                         % capsule edge alpha
 
 addParameter(ps,'PLOT_BOX_ADDED',true);             % plot box added
+addParameter(ps,'bafc','');                         % box added face color
 addParameter(ps,'bafa','');                         % box added face alpha
 addParameter(ps,'baec','');                         % box added edge color
 
@@ -180,6 +181,7 @@ cec                 = ps.Results.cec;
 cea                 = ps.Results.cea;
 
 PLOT_BOX_ADDED      = ps.Results.PLOT_BOX_ADDED;
+bafc                = ps.Results.bafc;
 bafa                = ps.Results.bafa;
 baec                = ps.Results.baec;
 
@@ -380,10 +382,15 @@ if h{fig_idx,subfig_idx}.first_flag || ...
                     else
                         bafa_use = bafa;
                     end
+                    if isempty(bafc)
+                        bafc_use = box_added.color;
+                    else
+                        bafc_use = bafc;
+                    end
                     h{fig_idx,subfig_idx}.box_added{i_idx} = patch(...
                         'Vertices',vertex_matrix,...
                         'Faces',faces_matrix,...
-                        'FaceColor',box_added.color,'FaceAlpha',bafa_use,...
+                        'FaceColor',bafc_use,'FaceAlpha',bafa_use,...
                         'EdgeColor',box_added.ec,'lineWidth',1);
                     h{fig_idx,subfig_idx}.box_added_t{i_idx} = hgtransform;
                     set(h{fig_idx,subfig_idx}.box_added{i_idx},...
