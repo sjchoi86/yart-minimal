@@ -10,7 +10,7 @@
 % - Plot multiple sliders and text boxes
 %
 ccc
-%% Make figure and change title
+%% Make figure and change title 
 ccc
 for tick = 1:100 % loop
     fig_idx = 1;
